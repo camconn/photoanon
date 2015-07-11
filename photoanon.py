@@ -14,7 +14,7 @@ from fractions import Fraction
 from random import uniform, randrange
 from time import time
 from datetime import datetime
-#import pprint
+import pprint
 
 
 IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.gif', '.tif', '.png')
@@ -123,13 +123,14 @@ def remove_bad_tags(path: str):
         # Asking for forgiveness is faster than asking for permission
         try:
             del metadata[tag]
+            print('Deleted tag {}'.format(tag))
         except KeyError:
             pass
 
     metadata.save_file()
 
 
-def write_metadata(path: str, data: dict):
+def write_metadata(path: str, data: dict=None):
     '''
     Write metadata to file
 
@@ -140,11 +141,10 @@ def write_metadata(path: str, data: dict):
         'Longitude': the longitude in decimal format
         'Altitude': the altitude in meters
     '''
-
     metadata = GExiv2.Metadata(path)
 
     if 'Time' in data:
-        date_obj = datetime.date.fromtimestamp(data['Time'])
+        date_obj = datetime.fromtimestamp(data['Time'])
         metadata.set_date_time(date_obj)
 
         # Don't set metadata values that aren't already there
@@ -156,25 +156,12 @@ def write_metadata(path: str, data: dict):
             if tag in metadata:
                 metadata[tag] = date_obj.strftime('%Y:%m:%d %H:%M:%S')
 
-    if 'Latitude' in data:
-        lat_dec = data['Latitude']
-        lat_format = _to_dms(lat_dec)
-        metadata[LATITUDE_TAG] = lat_format
+    if 'Latitude' in data and 'Longitude' in data and 'Altitude' in data:
+        metadata.set_gps_info(data['Latitude'],
+                              data['Longitude'],
+                              data['Altitude'])
 
-        if lat_dec > 0:
-            metadata[LATITUDE_TAG + 'Ref'] = 'N'
-        else:
-            metadata[LATITUDE_TAG + 'Ref'] = 'S'
-
-    if 'Longitude' in data:
-        long_dec = data['Longitude']
-        long_format = _to_dms(long_dec)
-        metadata[LONGITUDE_TAG] = long_format
-
-        if long_dec > 0:
-            metadata[LONGITUDE_TAG + 'Ref'] = 'E'
-        else:
-            metadata[LONGITUDE_TAG + 'Ref'] = 'W'
+    metadata.save_file()
 
 
 def read_metadata(path: str) -> dict:
@@ -217,6 +204,21 @@ def read_metadata(path: str) -> dict:
     return info
 
 
+def get_bad_tags(path: str):
+    '''
+    Get "bad" tags that an image has
+
+    path - the path of the file to check for bad EXIF tags
+
+    returns a tuple of the bad tags an image has
+    '''
+    _load_cache()
+
+    metadata = GExiv2.Metadata(path)
+
+    return tuple([key for key in metadata if key in _UNSAFE_TAGS_CACHE])
+
+
 def create_fake_data() -> dict:
     '''
     Create a dictionary of Fake EXIF data
@@ -248,15 +250,47 @@ def main():
                              '''random data for the unsafe EXIF tags. The `remove` option removes those tags completely.''')
 
     args = parser.parse_args()
-    #printer = pprint.PrettyPrinter(indent=4)
+    printer = pprint.PrettyPrinter(indent=4)
 
     for image in args.images:
         image_path = abspath(image)
-        image_info = read_metadata(image_path)
+        geotag_info = read_metadata(image_path)
 
-        #printer.pprint(image_info)
+        if args.info:  # nondestructive read to file's metadata
+            print('Geotagging data in {}'.format(image_path))
+            if len(geotag_info):
+                printer.pprint(geotag_info)
+            else:
+                print('None found')
 
-        #remove_bad_tags(image_path)
+            print('=' * 60)
+            print('Bad tags in {}:'.format(image_path))
+            bad_tags = get_bad_tags(image_path)
+            if len(bad_tags):
+                for t in bad_tags:
+                    print(t)
+            else:
+                print('None found')
+
+            if args.verbose:
+                print('=' * 60)
+                print('Full list of EXIF tags in {}:'.format(image_path))
+                metadata = GExiv2.Metadata(image_path)
+                for k in metadata:
+                    print('{}: {}'.format(k, metadata[k]))
+        else:
+            remove_bad_tags(image_path)
+            print('Removed bad image tags from {}'.format(image_path))
+
+            if args.method == 'randomize':
+                fake_geo_data = create_fake_data()
+                printer.pprint(fake_geo_data)
+                write_metadata(image_path, fake_geo_data)
+                print('Wrote fake geodata to {}'.format(image_path))
+            elif args.method == 'remove':
+                pass
+            else:
+                print('An error occurred...')
 
 
 if __name__ == '__main__':
