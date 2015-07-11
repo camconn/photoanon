@@ -1,0 +1,6 @@
+Exif.Image.Make
+Exif.Image.Model
+Exif.Image.Software
+Exif.Photo.ImageUniqueID
+Exif.Photo.MakerNote
+Exif.Photo.UserComment
