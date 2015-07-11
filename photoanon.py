@@ -11,8 +11,10 @@ from gi.repository import GExiv2
 import argparse
 from os.path import abspath, splitext, dirname, join
 from fractions import Fraction
-from random import uniform
-import pprint
+from random import uniform, randrange
+from time import time
+from datetime import datetime
+#import pprint
 
 
 IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.gif', '.tif', '.png')
@@ -54,14 +56,24 @@ def _to_deg(loc: str) -> float:
     if len(parts) != 4:
         raise ValueError('Bad coordinate format')
 
-    direction = parts[3]
+    direction = parts[3].upper().strip()
+
+    if direction not in ('N', 'S', 'E', 'W'):
+        raise ValueError('Invalid direction')
+
     dir_mult = 1 if (direction in ('N', 'E')) else -1
 
-    degrees = Fraction(parts[0])
-    mins = Fraction(parts[1])
-    secs = Fraction(parts[2])
+    # Use abs() to fix data
+    degrees = abs(Fraction(parts[0]))
+    mins = abs(Fraction(parts[1]))
+    secs = abs(Fraction(parts[2]))
 
-    return float(degrees + mins / 60 + secs / 3600) * dir_mult
+    result = float(degrees + mins / 60 + secs / 3600) * dir_mult
+
+    if not (result <= 180 and result >= -180):
+        raise ValueError('Coordinate out of range')
+
+    return result
 
 
 def _to_dms(loc: float) -> str:
@@ -71,9 +83,16 @@ def _to_dms(loc: float) -> str:
     loc - the location coordinate to convert
     '''
 
-    assert loc <= 180 and loc >= -180, 'Coordinate too large'
+    assert loc <= 180 and loc >= -180, 'Coordinate out of range [-180, 180]'
 
-    return None
+    is_positive = loc >= 0
+    loc = abs(loc)
+    minutes, seconds = divmod(loc * 3600, 60)
+    degrees, minutes = divmod(minutes, 60)
+    degrees = degrees if is_positive else -degrees
+
+    seconds = Fraction(seconds)
+    return '{}/1 {}/1 {}'.format(int(degrees), int(minutes), seconds)
 
 
 def _parse_altitude(alt: str, ref_bit: int) -> float:
@@ -108,6 +127,54 @@ def remove_bad_tags(path: str):
             pass
 
     metadata.save_file()
+
+
+def write_metadata(path: str, data: dict):
+    '''
+    Write metadata to file
+
+    path - the file path to write the metadata to
+    data - the data to write to the file
+        'Time': the UNIX time to set the image to
+        'Latitude': the latitude in decimal format
+        'Longitude': the longitude in decimal format
+        'Altitude': the altitude in meters
+    '''
+
+    metadata = GExiv2.Metadata(path)
+
+    if 'Time' in data:
+        date_obj = datetime.date.fromtimestamp(data['Time'])
+        metadata.set_date_time(date_obj)
+
+        # Don't set metadata values that aren't already there
+        if 'Exif.GPSInfo.GPSDateStamp' in metadata:
+            metadata['Exif.GPSInfo.GPSDateStamp'] = date_obj.strftime('%Y:%m:%d')
+
+        for tag in ('Exif.Image.DateTime', 'Exif.Photo.DateTimeDigitized',
+                    'Exif.Photo.DateTimeOriginal'):
+            if tag in metadata:
+                metadata[tag] = date_obj.strftime('%Y:%m:%d %H:%M:%S')
+
+    if 'Latitude' in data:
+        lat_dec = data['Latitude']
+        lat_format = _to_dms(lat_dec)
+        metadata[LATITUDE_TAG] = lat_format
+
+        if lat_dec > 0:
+            metadata[LATITUDE_TAG + 'Ref'] = 'N'
+        else:
+            metadata[LATITUDE_TAG + 'Ref'] = 'S'
+
+    if 'Longitude' in data:
+        long_dec = data['Longitude']
+        long_format = _to_dms(long_dec)
+        metadata[LONGITUDE_TAG] = long_format
+
+        if long_dec > 0:
+            metadata[LONGITUDE_TAG + 'Ref'] = 'E'
+        else:
+            metadata[LONGITUDE_TAG + 'Ref'] = 'W'
 
 
 def read_metadata(path: str) -> dict:
@@ -157,7 +224,8 @@ def create_fake_data() -> dict:
 
     data = {'Latitude': uniform(-180, 180),
             'Longitude': uniform(-180, 180),
-            'Altitude': uniform(-200, 3200)}
+            'Altitude': uniform(-200, 3200),
+            'Time': randrange(int(time()))}
 
     return data
 
