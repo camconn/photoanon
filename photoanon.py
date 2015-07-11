@@ -166,10 +166,9 @@ def write_metadata(path: str, data: dict=None):
 
 def read_metadata(path: str) -> dict:
     '''
-    Process an image and read it's information
+    Read a image's metadata
 
     path - the path of the image to anonymize
-    noise - whether or not to add random noise to the image
 
     Returns whether or not the image was successfully parsed
     '''
@@ -186,20 +185,28 @@ def read_metadata(path: str) -> dict:
     info = dict()
 
     if LONGITUDE_TAG in metadata and \
-       LATITUDE_TAG in metadata:
+       LATITUDE_TAG in metadata and \
+       ALTITUDE_TAG in metadata:
         lat_dms = metadata[LATITUDE_TAG] + ' ' + metadata[LATITUDE_TAG + 'Ref']
         long_dms = metadata[LONGITUDE_TAG] + ' ' + metadata[LONGITUDE_TAG + 'Ref']
 
-        #print('Lat:  {}'.format(lat_dms))
-        #print('Long: {}'.format(long_dms))
-
         info['Latitude'] = _to_deg(lat_dms)
         info['Longitude'] = _to_deg(long_dms)
-    if ALTITUDE_TAG in metadata:
+
         altitude_bit = metadata[ALTITUDE_TAG + 'Ref']
         altitude_dms = metadata[ALTITUDE_TAG]
 
         info['Altitude'] = _parse_altitude(altitude_dms, altitude_bit)
+
+    if 'Exif.Photo.DateTimeOriginal' in metadata:
+        info['Time'] = int(metadata.get_date_time().timestamp())
+
+    if 'Exif.Image.Artist' in metadata:
+        info['Artist'] = metadata['Exif.Image.Artist']
+    elif 'Exif.Image.CameraOwnerName' in metadata:
+        info['Artist'] = metadata['Exif.Image.CameraOwnerName']
+
+
 
     return info
 
@@ -254,12 +261,12 @@ def main():
 
     for image in args.images:
         image_path = abspath(image)
-        geotag_info = read_metadata(image_path)
+        image_info = read_metadata(image_path)
 
         if args.info:  # nondestructive read to file's metadata
-            print('Geotagging data in {}'.format(image_path))
-            if len(geotag_info):
-                printer.pprint(geotag_info)
+            print('Important data in {}'.format(image_path))
+            if len(image_info):
+                printer.pprint(image_info)
             else:
                 print('None found')
 
