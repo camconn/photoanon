@@ -4,7 +4,6 @@ setup(
     name='photoanon',
     version='0.1.0a',
     packages=find_packages(exclude=['tests']),
-    scripts=['src/photoanon.py'],
 
     # We need numpy and scipy
     setup_requires=['numpy'],
@@ -12,13 +11,12 @@ setup(
 
     package_data={
         # If any package contains *.txt
-        '': ['*.txt'],
-        #'photoanon': ['src/photoanon/*'],
+        'photoanon': ['*.txt'],
     },
 
     entry_points={
         'console_scripts': [
-            'photoanon = photoanon.photoanon:_main',
+            'photoanon = photoanon:_main',
         ]
     },
     # test_suite='photoanon.test.test',
