@@ -24,7 +24,7 @@ setup(
     description='Photo Anonymization Toolkit',
     license='GPLv3',
     keywords='metadata photo image privacy',
-    url='http://camconn.cc/introducting-photoanon/',   # project home page, if any
+    url='http://camconn.cc/introducing-photoanon/',   # project home page, if any
 
     zip_safe=False,
 )
