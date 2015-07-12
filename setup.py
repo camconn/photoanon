@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
+
 from setuptools import setup, find_packages
 setup(
     name='photoanon',
-    version='0.1.0a',
+    version='0.1.0b',
     packages=find_packages(exclude=['tests']),
 
-    # We need numpy and scipy
-    setup_requires=['numpy'],
-    install_requires=['numpy', 'scipy>=0.15.1'],
 
     package_data={
         # If any package contains *.txt
@@ -16,7 +14,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'photoanon = photoanon:_main',
+            'photoanon = photoanon:main',
         ]
     },
     # test_suite='photoanon.test.test',
