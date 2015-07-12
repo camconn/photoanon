@@ -20,11 +20,8 @@ from time import time
 from datetime import datetime
 import pprint
 from shutil import copyfile
-try:
-    from scipy import misc
-    from numpy import random, add
-except ImportError:
-    pass
+from scipy import misc
+from numpy import random, add
 
 
 IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.gif', '.tif', '.png')
