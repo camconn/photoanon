@@ -17,7 +17,8 @@ setup(
             'photoanon = photoanon:main',
         ]
     },
-    test_suite='tests',
+
+    test_suite='tests.test_suite',
 
     # metadata for upload to PyPI
     author='Cameron Conn',

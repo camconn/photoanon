@@ -28,4 +28,4 @@ For help using this program, run `./photoanon.py --help`
 
 ## Testing
 
-Unit tests are in `test.py`.
+Unit tests are in `tests/`. You can run them with `./setup.py test`.

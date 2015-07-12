@@ -2,8 +2,7 @@
 
 import unittest
 
-if __name__ == '__main__':
-    test_loader = unittest.defaultTestLoader()
-    test_runner = unittest.TextTestRunner()
+def test_suite():
+    test_loader = unittest.defaultTestLoader
     test_suite = test_loader.discover('.')
-    test_runner.run(test_suite)
+    return test_suite

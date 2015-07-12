@@ -61,12 +61,3 @@ class TestConversionMethods(unittest.TestCase):
         '''
         dec_1 = 85.6845321
         self.assertEqual(photoanon._to_dms(dec_1), '85/1 41/1 2316898633/536870912')
-
-
-if __name__ == '__main__':
-    test_loader = unittest.defaultTestLoader()
-    test_runner = unittest.TextTestRunner()
-    test_suite = test_loader.discover('.')
-    test_runner.run(test_suite)
-
-    unittest.main()
