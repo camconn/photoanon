@@ -260,7 +260,7 @@ def add_image_noise(path: str, new_path: str=None, noise_int=10.0):
         misc.imsave(path, new_image)
 
 
-def main():
+def _main():
     '''
     Interprets command-line arguments and act accordingly
     '''
@@ -338,4 +338,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    _main()

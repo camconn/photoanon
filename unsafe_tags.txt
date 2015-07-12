@@ -16,7 +16,6 @@ Exif.Image.OriginalRawFileData
 Exif.Image.ProcessingSoftware
 Exif.Image.SecurityClassification
 Exif.Image.Software
-Exif.Image.SubjectLocation
 Exif.Image.TimeZoneOffset
 Exif.Image.LocalizedCameraModel
 Exif.Image.UniqueCameraModel
