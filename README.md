@@ -1,7 +1,8 @@
 #PhotoAnon
 
-A simple tool to anonymize EXIF data from photos. 
-I have written a [blog post about photoanon](http://camconn.cc/introducing-photoanon/) to help new users.
+A simple tool to anonymize EXIF data from photos.
+
+You can read [this blog post](http://camconn.cc/introducing-photoanon/) to learn a little about photoanon.
 
 ## Dependencies
 
