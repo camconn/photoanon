@@ -6,3 +6,4 @@ include/
 lib/
 build/
 dist/
+photoanon.egg-info
