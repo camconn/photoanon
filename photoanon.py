@@ -15,6 +15,9 @@ from random import uniform, randrange
 from time import time
 from datetime import datetime
 import pprint
+from scipy import misc
+from numpy import random, add
+from shutil import copyfile
 
 
 IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.gif', '.tif', '.png')
@@ -206,8 +209,6 @@ def read_metadata(path: str) -> dict:
     elif 'Exif.Image.CameraOwnerName' in metadata:
         info['Artist'] = metadata['Exif.Image.CameraOwnerName']
 
-
-
     return info
 
 
@@ -239,28 +240,60 @@ def create_fake_data() -> dict:
     return data
 
 
+def add_image_noise(path: str, new_path: str=None, noise_int=10.0):
+    '''
+    Add noise to an image
+
+    path - path of original image to add noise to
+    noise_int - possion noise interval
+    new_path - path to save image with noise (if None, overwrite original file)
+    '''
+    original_image = misc.imread(path).astype(float)
+
+    noise = random.poisson(noise_int, original_image.shape).astype(float)
+
+    new_image = add(original_image, noise)
+
+    if new_path:
+        misc.imsave(new_path, new_image)
+    else:
+        misc.imsave(path, new_image)
+
+
 def main():
     '''
     Interprets command-line arguments and act accordingly
     '''
-    parser = argparse.ArgumentParser(description='Tool to anonymize images via EXIF and image manipulation.')
+    parser = argparse.ArgumentParser(description='''Tool to anonymize images via '''
+                                                 '''EXIF and image manipulation.''')
     parser.add_argument('images', help='Image(s) to anonymize', nargs='+')
-    parser.add_argument('-p', '--preserve', help='Keep original images; adds a prefix to anonymized images.',
+    parser.add_argument('-p', '--preserve', action='store_true',
+                        help='Keep original images; adds a prefix to anonymized images.')
+    parser.add_argument('-n', '--noise', help='Add noise to image to combat lens fingerprinting.',
                         action='store_true')
-    parser.add_argument('-n', '--noise', help='Add noise to image to combat lense fingerprinting.',
+    parser.add_argument('-v', '--verbose', help='Be very generous with printing to output.',
                         action='store_true')
-    parser.add_argument('-v', '--verbose', help='Be very generous with printing to output.', action='store_true')
     parser.add_argument('-i', '--info', help='Get information about file\'s dangerous EXIF data.',
                         action='store_true')
-    parser.add_argument('-m', '--method', type=str, choices=('remove', 'randomize'), default='randomize', nargs=1,
-                        help='''The method to anonymize the file with. Default=randomize. The `randomize` option creates '''
-                             '''random data for the unsafe EXIF tags. The `remove` option removes those tags completely.''')
+    parser.add_argument('-m', '--method', type=str, choices=('remove', 'randomize'),
+                        default='randomize', nargs=1,
+                        help='''The method to anonymize the file with. Default=randomize. The '''
+                        '''`randomize` option creates random data for the unsafe EXIF tags. '''
+                        '''The `remove` option removes those tags completely.''')
 
     args = parser.parse_args()
     printer = pprint.PrettyPrinter(indent=4)
 
     for image in args.images:
         image_path = abspath(image)
+
+        if args.preserve:
+            incomplete_path, ext = splitext(image_path)
+            new_image_path = incomplete_path + '-photoanon' + ext
+            copyfile(image_path, new_image_path)
+            print('Copying {} to {}'.format(image_path, new_image_path))
+            image_path = new_image_path
+
         image_info = read_metadata(image_path)
 
         if args.info:  # nondestructive read to file's metadata
@@ -287,7 +320,7 @@ def main():
                     print('{}: {}'.format(k, metadata[k]))
         else:
             remove_bad_tags(image_path)
-            print('Removed bad image tags from {}'.format(image_path))
+            print('Removed bad EXIF tags from {}'.format(image_path))
 
             if args.method == 'randomize':
                 fake_geo_data = create_fake_data()
@@ -298,6 +331,10 @@ def main():
                 pass
             else:
                 print('An error occurred...')
+
+            if args.noise:
+                add_image_noise(image_path)
+                print('Added random noise to {}'.format(image_path))
 
 
 if __name__ == '__main__':
