@@ -6,9 +6,19 @@ A simple tool to anonymize EXIF data from photos.
 
 To use photoanon.py, you must install the following dependencies on Ubuntu
 
-    sudo apt-get install gir1.2-gexiv2-0.10 libexiv2-dev
+    sudo apt-get install python3-scipy python3-numpy gir1.2-gexiv2-0.10 libexiv2-dev
 
 Adapt these instructions to your distribution as needed.
+
+Once you have installed these dependencies, you may install photoanon with:
+
+    git clone https://github.com/camconn/photoanon.git
+    cd photoanon
+    sudo ./setup.py install
+
+Now, you may run the program with the `photoanon` command
+
+    $ photoanon --help
 
 ## Usage
 
