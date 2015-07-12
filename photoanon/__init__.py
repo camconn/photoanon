@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- Mode: Python; py-indent-offset: 4 -*-
-'''
-Image anonymization toolkit
-'''
-
-__name__ = 'photoanon'
 
 # (c) Copyright Cameron Conn 2015
 # This file is licensed GPLv3 or Later
 # See LICENSE for details
+'''
+Photoanon
+
+Image anonymization toolkit
+'''
 
 from gi.repository import GExiv2
 
