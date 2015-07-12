@@ -1,5 +1,7 @@
 #PhotoAnon
 
+A simple tool to anonymize EXIF data from photos.
+
 ## Dependencies
 
 To use photoanon.py, you must install the following dependencies on Ubuntu
